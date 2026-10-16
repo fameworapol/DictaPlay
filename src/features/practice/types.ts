@@ -9,4 +9,6 @@ export interface SessionStats {
   exactMatches: number
   /** Word-level error totals summed across every Check press in the session. */
   errorTotals: { incorrect: number; missing: number; extra: number }
+  /** Active practice time only (paused while the tab was hidden). */
+  activeDurationMs: number
 }

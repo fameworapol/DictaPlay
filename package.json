@@ -15,6 +15,7 @@
     "validate-lessons": "tsx scripts/validate-lessons/cli.ts"
   },
   "dependencies": {
+    "idb": "^8.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"
@@ -31,6 +32,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "esbuild": "^0.24.2",
     "eslint": "^9.17.0",
+    "fake-indexeddb": "^6.0.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",

@@ -5,13 +5,17 @@ import { ComparisonFeedback } from '../features/feedback/ComparisonFeedback'
 import { DIFFICULTY_LABEL } from '../features/lessons/constants'
 import { useLessonData } from '../features/lessons/useLessonData'
 import { availableExercisesFor } from '../features/lessons/selectors'
+import { useActiveDuration } from '../features/practice/useActiveDuration'
+import { useExerciseAudioSrc } from '../features/practice/useExerciseAudioSrc'
 import type { SessionStats } from '../features/practice/types'
 import { compareTexts, type ComparisonResult } from '../lib/text-comparison'
+import { recordAttempt, saveSession } from '../lib/storage'
+import type { Exercise, Lesson } from '../types/lesson'
 
 export function PracticePage() {
   const { lessonId } = useParams<{ lessonId: string }>()
   const navigate = useNavigate()
-  const state = useLessonData()
+  const { state } = useLessonData()
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answer, setAnswer] = useState('')
@@ -22,6 +26,19 @@ export function PracticePage() {
   const [checkedIndices, setCheckedIndices] = useState<Set<number>>(() => new Set())
   const [exactIndices, setExactIndices] = useState<Set<number>>(() => new Set())
   const [errorTotals, setErrorTotals] = useState({ incorrect: 0, missing: 0, extra: 0 })
+
+  const getActiveDurationMs = useActiveDuration()
+  const [sessionStartedAt] = useState(() => Date.now())
+
+  const lesson: Lesson | undefined =
+    state.status === 'ready' ? state.lessons.find((l) => l.id === lessonId) : undefined
+  const exercises: Exercise[] =
+    state.status === 'ready' && lesson
+      ? availableExercisesFor(lesson, state.exercisesById, state.unavailableExerciseIds)
+      : []
+  const exercise: Exercise | null = exercises[currentIndex] ?? null
+
+  const audio = useExerciseAudioSrc(exercise)
 
   useEffect(() => {
     setVisited((prev) => (prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex)))
@@ -40,7 +57,6 @@ export function PracticePage() {
     )
   }
 
-  const lesson = state.lessons.find((l) => l.id === lessonId)
   if (!lesson) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900" role="alert">
@@ -52,7 +68,6 @@ export function PracticePage() {
     )
   }
 
-  const exercises = availableExercisesFor(lesson, state.exercisesById, state.unavailableExerciseIds)
   if (exercises.length === 0) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900" role="alert">
@@ -64,11 +79,12 @@ export function PracticePage() {
     )
   }
 
-  const exercise = exercises[currentIndex]
+  if (!exercise) return null // currentIndex out of range momentarily during a transition
+
   const isLast = currentIndex === exercises.length - 1
 
   function handleCheck() {
-    if (checked) return
+    if (checked || !exercise) return
     const comparison = compareTexts(exercise.transcript, answer)
     setResult(comparison)
     setChecked(true)
@@ -81,6 +97,7 @@ export function PracticePage() {
       missing: prev.missing + comparison.counts.missing,
       extra: prev.extra + comparison.counts.extra,
     }))
+    void recordAttempt(exercise.id, comparison)
   }
 
   function handleClear() {
@@ -95,14 +112,28 @@ export function PracticePage() {
 
   function handleNext() {
     if (isLast) {
+      const now = Date.now()
       const stats: SessionStats = {
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
+        lessonId: lesson!.id,
+        lessonTitle: lesson!.title,
         attempted: visited.size,
         completed: checkedIndices.size,
         exactMatches: exactIndices.size,
         errorTotals,
+        activeDurationMs: getActiveDurationMs(),
       }
+      void saveSession({
+        id: `session-${crypto.randomUUID()}`,
+        lessonId: stats.lessonId,
+        lessonTitle: stats.lessonTitle,
+        startedAt: sessionStartedAt,
+        endedAt: now,
+        attempted: stats.attempted,
+        completed: stats.completed,
+        exactMatches: stats.exactMatches,
+        errorTotals: stats.errorTotals,
+        activeDurationMs: stats.activeDurationMs,
+      })
       navigate('/summary', { state: stats })
       return
     }
@@ -128,7 +159,15 @@ export function PracticePage() {
         </p>
       </div>
 
-      <AudioPlayer src={`/${exercise.audioPath}`} label={`Audio for ${exercise.title}`} />
+      {audio.error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800" role="alert">
+          {audio.error}
+        </div>
+      ) : audio.src ? (
+        <AudioPlayer src={audio.src} label={`Audio for ${exercise.title}`} />
+      ) : (
+        <p className="text-sm text-slate-500">Loading audio…</p>
+      )}
 
       <div>
         <label htmlFor="answer" className="block text-sm font-medium text-slate-700">

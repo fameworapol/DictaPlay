@@ -12,4 +12,10 @@ export type LessonDataState =
       unavailableExerciseIds: Set<string>
     }
 
-export const LessonDataContext = createContext<LessonDataState | null>(null)
+export interface LessonDataContextValue {
+  state: LessonDataState
+  /** Re-fetches the static index and re-reads custom content from storage. */
+  refresh: () => void
+}
+
+export const LessonDataContext = createContext<LessonDataContextValue | null>(null)

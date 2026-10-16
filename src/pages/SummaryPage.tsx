@@ -1,6 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { SessionStats } from '../features/practice/types'
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.round(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
 export function SummaryPage() {
   const location = useLocation()
   const stats = location.state as SessionStats | null
@@ -31,6 +38,7 @@ export function SummaryPage() {
           label="Total errors"
           value={stats.errorTotals.incorrect + stats.errorTotals.missing + stats.errorTotals.extra}
         />
+        <Stat label="Duration" value={formatDuration(stats.activeDurationMs)} />
       </dl>
 
       <div className="rounded-lg bg-white p-4 shadow-sm">
@@ -60,7 +68,7 @@ export function SummaryPage() {
   )
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-md bg-slate-100 p-3 text-center">
       <dt className="text-xs text-slate-500">{label}</dt>

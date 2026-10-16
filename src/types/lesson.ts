@@ -16,11 +16,14 @@ export interface Exercise {
   title: string
   difficulty: Difficulty
   /**
-   * Relative path under /public. Production (movie-derived, approved) clips
-   * live under "audio/built-in/<difficulty>/…"; sample/demo clips live under
-   * the separate "audio/sample/<difficulty>/…" and are labeled "Sample" in the UI.
+   * Relative path under /public, for built-in/sample exercises only.
+   * Production (movie-derived, approved) clips live under
+   * "audio/built-in/<difficulty>/…"; sample/demo clips live under the
+   * separate "audio/sample/<difficulty>/…" and are labeled "Sample" in the UI.
    */
-  audioPath: string
+  audioPath?: string
+  /** For custom exercises only: id of the blob in the audioBlobs IndexedDB store. */
+  audioBlobId?: string
   transcript: string
   /** Present for sample/demo content so the UI can label it "Sample". */
   sourceId?: string

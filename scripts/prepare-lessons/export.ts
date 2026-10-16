@@ -58,7 +58,8 @@ export function groupIntoLessons(candidates: CandidateClip[]): GroupedLessons {
           difficulty: candidate.difficulty,
           audioPath: `audio/built-in/${candidate.difficulty}/${candidate.id}.m4a`,
           transcript: candidate.text,
-          sourceId: source,
+          // sourceId is reserved for flagging sample/demo content in the UI
+          // (see src/types/lesson.ts); production clips leave it unset.
         })
       })
     }

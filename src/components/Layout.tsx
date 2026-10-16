@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useStorageAvailability } from '../hooks/useStorageAvailability'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-2 text-sm font-medium ${
@@ -6,6 +7,8 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 export function Layout() {
+  const storage = useStorageAvailability()
+
   return (
     <div className="flex min-h-screen flex-col">
       <a
@@ -19,15 +22,30 @@ export function Layout() {
           <NavLink to="/" className="text-lg font-bold text-slate-900">
             English Dictation
           </NavLink>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             <NavLink to="/" className={navLinkClass} end>
               Home
             </NavLink>
             <NavLink to="/library" className={navLinkClass}>
               Library
             </NavLink>
+            <NavLink to="/manage" className={navLinkClass}>
+              My Content
+            </NavLink>
+            <NavLink to="/settings" className={navLinkClass}>
+              Settings
+            </NavLink>
           </div>
         </nav>
+        {storage === 'unavailable' && (
+          <div
+            role="status"
+            className="bg-amber-50 px-4 py-2 text-center text-sm text-amber-900"
+          >
+            Your browser's storage isn't available, so progress and custom lessons won't be saved
+            this session. You can still practice.
+          </div>
+        )}
       </header>
       <main id="main-content" className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
         <Outlet />
