@@ -118,8 +118,9 @@ Importing never touches built-in/sample content — custom ids always use a `cus
 | `extract-audio <mkv> --source <id> --stream <n>` | Decodes the chosen audio track to `workdir/<id>/audio.wav` |
 | `extract-subs <mkv> --source <id> --stream <n>` (or `--from <file.srt>`) | Gets subtitles — from the file, or an external `.srt` you already have |
 | `transcribe --source <id>` | Only if there are no usable subtitles — runs the local STT tool |
-| `segment --source <id> --difficulty <easy\|medium\|hard> [--target-seconds 10]` | Merges fragmented subtitle cues into whole sentences, splits cues with multiple sentences, then groups consecutive whole sentences into clips around 10 seconds long (never splitting a sentence to do it, and never merging across a scene-change-sized gap) — pass `--target-seconds 0` to go back to one sentence per clip. Flags anything questionable (empty transcript, invalid timing, pace too fast for the word count, a long sentence, a duplicate line). Writes `workdir/candidates.json` with every candidate `status: "pending"` — **nothing is approved automatically** |
+| `segment --source <id> --difficulty <easy\|medium\|hard> [--target-seconds 10]` | Drops song lyrics (any line with a ♪ marker) and fragments under 3 words (interjections like "Huh?") — text-only rules, not a quality judgment — then merges fragmented subtitle cues into whole sentences, splits cues with multiple sentences, then groups consecutive whole sentences into clips around 10 seconds long (never splitting a sentence to do it, and never merging across a scene-change-sized gap) — pass `--target-seconds 0` to go back to one sentence per clip. Flags anything else questionable (empty transcript, invalid timing, pace too fast for the word count, a long sentence, a duplicate line). Writes `workdir/candidates.json` with every candidate `status: "pending"` — **nothing is approved automatically** |
 | `cut --source <id>` | Cuts each candidate to its own mono AAC clip (~64 kbps, ~300 ms padding) in `workdir/<id>/candidates/<difficulty>/`, and flags a long silent span if ffmpeg's silence detector finds one |
+| `prune --flag <flagName> [--source <id>]` | Permanently drops every candidate carrying that flag (and its audio file) — another mechanical rule over an already-computed flag, e.g. `prune --flag long_silence`, not a substitute for `review` |
 | `validate` | Fails if any **approved** clip has an unresolved flag or missing audio |
 | `export` | Runs `validate` first; copies only approved clips into `public/audio/built-in/<difficulty>/` and writes/merges the production lesson index; prints the total exported size and warns past `--budget-mb` (default 150) |
 
@@ -151,7 +152,7 @@ npm run lessons -- export
 npm run test
 ```
 
-102 tests covering: the comparison engine (normalization, alignment, the documented tie-break rule, contractions, repeated/shifted words); the movie pipeline (SRT parsing, sentence segmentation, flag detection, validate/export logic) against small generated fixtures, never real movies; the storage layer (create/edit/delete, validation failures, the shared-audio delete warning, export/import round-trip, progress surviving a simulated reload) via `fake-indexeddb`; and the production-index validator.
+117 tests covering: the comparison engine (normalization, alignment, the documented tie-break rule, contractions, repeated/shifted words); the movie pipeline (SRT parsing, sentence segmentation, flag detection, validate/export logic) against small generated fixtures, never real movies; the storage layer (create/edit/delete, validation failures, the shared-audio delete warning, export/import round-trip, progress surviving a simulated reload) via `fake-indexeddb`; and the production-index validator.
 
 ## Accessibility
 
