@@ -6,12 +6,13 @@ import {
   extractAudioCommand,
   extractSubsCommand,
   inspectCommand,
+  pruneByFlagCommand,
   segmentCommand,
   transcribeCommand,
   validateCommand,
 } from './commands'
 import { projectRoot } from './paths'
-import type { Difficulty } from './types'
+import type { CandidateFlag, Difficulty } from './types'
 
 const WORKDIR = `${projectRoot}workdir`
 const PUBLIC_AUDIO_DIR = `${projectRoot}public/audio/built-in`
@@ -32,6 +33,7 @@ Commands:
   transcribe --source <id>
   segment --source <id> --difficulty <easy|medium|hard> [--force] [--target-seconds 10]
   cut --source <id>
+  prune --flag <flagName> [--source <id>]
   review [--port 4321]
   validate
   export [--budget-mb 150]
@@ -94,6 +96,13 @@ async function main() {
       const source = flag(rest, 'source')
       if (!source) usage()
       await cutCommand(source, WORKDIR)
+      return
+    }
+    case 'prune': {
+      const flagName = flag(rest, 'flag') as CandidateFlag | undefined
+      const source = flag(rest, 'source')
+      if (!flagName) usage()
+      await pruneByFlagCommand(WORKDIR, flagName, source)
       return
     }
     case 'review': {

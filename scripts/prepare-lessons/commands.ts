@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { basename } from 'node:path'
-import { candidatesPathFor, clipId, readCandidates, writeCandidates } from './candidates'
+import { candidatesPathFor, clipId, partitionCandidatesByFlag, readCandidates, writeCandidates } from './candidates'
 import { exportApprovedClips } from './export'
 import { cutClip, detectSilenceDurations, extractAudioTrack, extractSubtitleTrack, inspectMedia } from './ffmpeg'
 import { detectSegmentFlags, findDuplicateTextIndices, isMusicLyricText, isTooShortToBeASentence } from './flags'
@@ -15,7 +15,7 @@ import {
 import { buildSentenceSegments, groupIntoClips } from './segment'
 import { parseSrt } from './srt'
 import { whisperCliProvider } from './transcribe'
-import type { CandidateClip, Difficulty } from './types'
+import type { CandidateClip, CandidateFlag, Difficulty } from './types'
 import { validateApprovedCandidates } from './validate'
 
 export async function inspectCommand(mkvPath: string): Promise<void> {
@@ -206,6 +206,33 @@ export async function cutCommand(source: string, workdir: string): Promise<void>
 
   await writeCandidates(candidatesPathFor(workdir), candidatesFile)
   console.log(`Cut ${cutCount} clip(s) for "${source}".`)
+}
+
+/**
+ * Permanently drops every candidate carrying `flag` (optionally scoped to
+ * one source): removes it from candidates.json and deletes its cut audio
+ * file. This is a mechanical rule over already-computed flags (e.g.
+ * long_silence from ffmpeg's own silence detector), not a listening
+ * judgment — it doesn't replace `review`, which is still how a clip
+ * actually gets approved.
+ */
+export async function pruneByFlagCommand(
+  workdir: string,
+  flag: CandidateFlag,
+  source?: string
+): Promise<void> {
+  const candidatesFile = await readCandidates(candidatesPathFor(workdir))
+  const { toRemove, toKeep } = partitionCandidatesByFlag(candidatesFile.candidates, flag, source)
+
+  for (const candidate of toRemove) {
+    const clipPath = candidateClipPath(workdir, candidate)
+    if (existsSync(clipPath)) await unlink(clipPath)
+  }
+
+  await writeCandidates(candidatesPathFor(workdir), { schemaVersion: 1, candidates: toKeep })
+  console.log(
+    `Removed ${toRemove.length} candidate(s) flagged "${flag}"${source ? ` for source "${source}"` : ''}.`
+  )
 }
 
 export async function validateCommand(workdir: string): Promise<boolean> {

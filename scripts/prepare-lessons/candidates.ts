@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import type { CandidatesFile } from './types'
+import type { CandidateClip, CandidateFlag, CandidatesFile } from './types'
 
 export function candidatesPathFor(workdir: string): string {
   return `${workdir}/candidates.json`
@@ -24,4 +24,24 @@ export async function writeCandidates(path: string, file: CandidatesFile): Promi
 export function clipId(source: string, difficulty: string, sequence: number): string {
   const padded = String(sequence).padStart(3, '0')
   return `${source}-${difficulty}-${padded}`
+}
+
+export interface PartitionByFlagResult {
+  toRemove: CandidateClip[]
+  toKeep: CandidateClip[]
+}
+
+/** Pure split of candidates into those carrying `flag` (optionally scoped to one source) and the rest. */
+export function partitionCandidatesByFlag(
+  candidates: CandidateClip[],
+  flag: CandidateFlag,
+  source?: string
+): PartitionByFlagResult {
+  const toRemove: CandidateClip[] = []
+  const toKeep: CandidateClip[] = []
+  for (const candidate of candidates) {
+    const matches = candidate.flags.includes(flag) && (!source || candidate.source === source)
+    ;(matches ? toRemove : toKeep).push(candidate)
+  }
+  return { toRemove, toKeep }
 }
