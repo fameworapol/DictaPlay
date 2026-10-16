@@ -71,7 +71,7 @@ export function SummaryPage() {
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-md bg-slate-100 p-3 text-center">
-      <dt className="text-xs text-slate-500">{label}</dt>
+      <dt className="text-xs text-slate-600">{label}</dt>
       <dd className="text-xl font-semibold">{value}</dd>
     </div>
   )

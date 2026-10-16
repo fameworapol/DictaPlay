@@ -1,0 +1,10 @@
+# Never upload source movies, extracted audio, or pipeline working files.
+workdir/
+movie/
+*.mkv
+*.mov
+
+# Not needed in the deployed function/bundle.
+tests/
+scripts/
+.git/

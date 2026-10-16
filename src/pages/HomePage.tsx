@@ -59,11 +59,11 @@ export function HomePage() {
         <h2 className="text-lg font-semibold">Your progress</h2>
         <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="rounded-md bg-slate-100 p-3 text-center">
-            <dt className="text-xs text-slate-500">Exercises completed</dt>
+            <dt className="text-xs text-slate-600">Exercises completed</dt>
             <dd className="text-xl font-semibold">{stats?.exercisesCompleted ?? 0}</dd>
           </div>
           <div className="rounded-md bg-slate-100 p-3 text-center">
-            <dt className="text-xs text-slate-500">Sessions</dt>
+            <dt className="text-xs text-slate-600">Sessions</dt>
             <dd className="text-xl font-semibold">{stats?.sessionsCount ?? 0}</dd>
           </div>
         </dl>
