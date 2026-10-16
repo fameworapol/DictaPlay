@@ -19,10 +19,7 @@ interface ComparisonFeedbackProps {
 export function ComparisonFeedback({ transcript, result }: ComparisonFeedbackProps) {
   return (
     <div aria-live="polite" className="space-y-4">
-      <p className="sr-only">
-        Result: {result.counts.correct} correct, {result.counts.incorrect} incorrect,{' '}
-        {result.counts.missing} missing, {result.counts.extra} extra.
-      </p>
+      <p className="sr-only">Answer revealed.</p>
 
       <div>
         <h3 className="text-sm font-semibold text-slate-600">Correct sentence</h3>
@@ -47,22 +44,6 @@ export function ComparisonFeedback({ transcript, result }: ComparisonFeedbackPro
           })}
         </ul>
       </div>
-
-      <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <CountStat label="Correct" value={result.counts.correct} />
-        <CountStat label="Incorrect" value={result.counts.incorrect} />
-        <CountStat label="Missing" value={result.counts.missing} />
-        <CountStat label="Extra" value={result.counts.extra} />
-      </dl>
-    </div>
-  )
-}
-
-function CountStat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md bg-slate-100 p-2 text-center">
-      <dt className="text-xs text-slate-600">{label}</dt>
-      <dd className="text-lg font-semibold">{value}</dd>
     </div>
   )
 }

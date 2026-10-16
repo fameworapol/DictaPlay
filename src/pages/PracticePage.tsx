@@ -2,6 +2,7 @@ import { useEffect, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AudioPlayer } from '../components/AudioPlayer'
 import { ComparisonFeedback } from '../features/feedback/ComparisonFeedback'
+import { ResultSummary } from '../features/feedback/ResultSummary'
 import { DIFFICULTY_LABEL } from '../features/lessons/constants'
 import { useLessonData } from '../features/lessons/useLessonData'
 import { availableExercisesFor } from '../features/lessons/selectors'
@@ -21,6 +22,7 @@ export function PracticePage() {
   const [answer, setAnswer] = useState('')
   const [checked, setChecked] = useState(false)
   const [result, setResult] = useState<ComparisonResult | null>(null)
+  const [answerRevealed, setAnswerRevealed] = useState(false)
 
   const [visited, setVisited] = useState<Set<number>>(() => new Set([0]))
   const [checkedIndices, setCheckedIndices] = useState<Set<number>>(() => new Set())
@@ -107,7 +109,12 @@ export function PracticePage() {
   function handleRetry() {
     setChecked(false)
     setResult(null)
+    setAnswerRevealed(false)
     setAnswer('')
+  }
+
+  function handleShowAnswer() {
+    setAnswerRevealed(true)
   }
 
   function handleNext() {
@@ -141,6 +148,7 @@ export function PracticePage() {
     setAnswer('')
     setChecked(false)
     setResult(null)
+    setAnswerRevealed(false)
   }
 
   function handleTextareaKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -213,6 +221,15 @@ export function PracticePage() {
             >
               Retry
             </button>
+            {!answerRevealed && (
+              <button
+                type="button"
+                onClick={handleShowAnswer}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100"
+              >
+                Show Answer
+              </button>
+            )}
             <button
               type="button"
               onClick={handleNext}
@@ -224,7 +241,12 @@ export function PracticePage() {
         )}
       </div>
 
-      {checked && result && <ComparisonFeedback transcript={exercise.transcript} result={result} />}
+      {checked && result && (
+        <>
+          <ResultSummary result={result} />
+          {answerRevealed && <ComparisonFeedback transcript={exercise.transcript} result={result} />}
+        </>
+      )}
     </div>
   )
 }
