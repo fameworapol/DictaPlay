@@ -68,15 +68,6 @@ export function HomePage() {
           </div>
         </dl>
       </section>
-
-      <section className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">About the sample content</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Lessons labeled <span className="font-semibold">Sample</span> use short sentences read by
-          a text-to-speech voice, not real movie audio. They exist to exercise the practice flow
-          while real lesson content is prepared separately.
-        </p>
-      </section>
     </div>
   )
 }

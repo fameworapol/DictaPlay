@@ -1,39 +1,6 @@
 {
   "lessons": [
     {
-      "id": "lesson-sample-easy",
-      "title": "Sample: Everyday sentences (Easy)",
-      "difficulty": "easy",
-      "source": "builtin",
-      "exerciseIds": [
-        "ex-001",
-        "ex-002",
-        "ex-003"
-      ]
-    },
-    {
-      "id": "lesson-sample-medium",
-      "title": "Sample: Everyday sentences (Medium)",
-      "difficulty": "medium",
-      "source": "builtin",
-      "exerciseIds": [
-        "ex-004",
-        "ex-005",
-        "ex-006"
-      ]
-    },
-    {
-      "id": "lesson-sample-hard",
-      "title": "Sample: Everyday sentences (Hard)",
-      "difficulty": "hard",
-      "source": "builtin",
-      "exerciseIds": [
-        "ex-007",
-        "ex-008",
-        "ex-009"
-      ]
-    },
-    {
       "id": "Toy_Story_5-lesson-1",
       "title": "Toy Story 5 — Part 1",
       "difficulty": "easy",
@@ -1922,87 +1889,6 @@
     }
   ],
   "exercises": [
-    {
-      "id": "ex-001",
-      "lessonId": "lesson-sample-easy",
-      "title": "Sample 1",
-      "difficulty": "easy",
-      "audioPath": "audio/sample/easy/ex-001.m4a",
-      "transcript": "The boy is playing football.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-002",
-      "lessonId": "lesson-sample-easy",
-      "title": "Sample 2",
-      "difficulty": "easy",
-      "audioPath": "audio/sample/easy/ex-002.m4a",
-      "transcript": "I like to eat apples.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-003",
-      "lessonId": "lesson-sample-easy",
-      "title": "Sample 3",
-      "difficulty": "easy",
-      "audioPath": "audio/sample/easy/ex-003.m4a",
-      "transcript": "She is reading a book.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-004",
-      "lessonId": "lesson-sample-medium",
-      "title": "Sample 1",
-      "difficulty": "medium",
-      "audioPath": "audio/sample/medium/ex-004.m4a",
-      "transcript": "Despite the rain, they decided to go for a walk.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-005",
-      "lessonId": "lesson-sample-medium",
-      "title": "Sample 2",
-      "difficulty": "medium",
-      "audioPath": "audio/sample/medium/ex-005.m4a",
-      "transcript": "He couldn't find his keys this morning.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-006",
-      "lessonId": "lesson-sample-medium",
-      "title": "Sample 3",
-      "difficulty": "medium",
-      "audioPath": "audio/sample/medium/ex-006.m4a",
-      "transcript": "The meeting has been rescheduled to next Friday.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-007",
-      "lessonId": "lesson-sample-hard",
-      "title": "Sample 1",
-      "difficulty": "hard",
-      "audioPath": "audio/sample/hard/ex-007.m4a",
-      "transcript": "Notwithstanding the committee's reservations, the proposal was approved unanimously.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-008",
-      "lessonId": "lesson-sample-hard",
-      "title": "Sample 2",
-      "difficulty": "hard",
-      "audioPath": "audio/sample/hard/ex-008.m4a",
-      "transcript": "She wouldn't have missed the flight if the traffic hadn't been so unpredictable.",
-      "sourceId": "sample-tts"
-    },
-    {
-      "id": "ex-009",
-      "lessonId": "lesson-sample-hard",
-      "title": "Sample 3",
-      "difficulty": "hard",
-      "audioPath": "audio/sample/hard/ex-009.m4a",
-      "transcript": "The researchers’ findings, though preliminary, suggest a correlation between sleep and memory retention.",
-      "sourceId": "sample-tts"
-    },
     {
       "id": "Toy_Story_5-easy-002",
       "lessonId": "Toy_Story_5-lesson-1",
