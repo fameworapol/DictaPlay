@@ -70,6 +70,46 @@ describe('buildSentenceSegments', () => {
   it('returns no segments for an empty cue list', () => {
     expect(buildSentenceSegments([])).toEqual([])
   })
+
+  it('does not bridge a huge time gap while hunting for terminal punctuation (regression)', () => {
+    // A watermark/song-lyric-style line with no terminal punctuation,
+    // followed by real dialogue minutes later, must not merge into one
+    // multi-minute "sentence" just because the first line never hit a period.
+    const cues = [
+      cue(1, 2, 7, 'Downloaded From'),
+      cue(2, 8, 13, 'SeriezLoaded.ng'), // contains a "." but not at the end of the string
+      cue(3, 180, 182, 'Star.'),
+    ]
+    const segments = buildSentenceSegments(cues)
+    expect(segments.length).toBeGreaterThan(1)
+    // The two watermark cues are close together (1s gap) and legitimately
+    // merge into one ~11s fragment; what must NOT happen is that fragment
+    // stretching another 167s to swallow "Star." too.
+    const longest = Math.max(...segments.map((s) => s.end - s.start))
+    expect(longest).toBeLessThan(20)
+    const star = segments.find((s) => s.text === 'Star.')
+    expect(star).toMatchObject({ start: 180, end: 182 })
+  })
+
+  it('caps an unpunctuated run (e.g. song lyrics) at the max fragment duration (regression)', () => {
+    // Ten consecutive 2s lyric lines, no terminal punctuation anywhere, each
+    // close enough in time that the gap cap alone would never trigger.
+    const cues = Array.from({ length: 10 }, (_, i) =>
+      cue(i + 1, i * 2, i * 2 + 2, `♪ Lyric line ${i} ♪`)
+    )
+    const segments = buildSentenceSegments(cues)
+    for (const s of segments) {
+      expect(s.end - s.start).toBeLessThanOrEqual(15)
+    }
+    expect(segments.length).toBeGreaterThan(1)
+  })
+
+  it('still merges fragments across a small, plausible gap', () => {
+    const cues = [cue(1, 0, 1, 'I think'), cue(2, 1.5, 3, "it's fine.")] // 0.5s gap, under the cap
+    const segments = buildSentenceSegments(cues)
+    expect(segments).toHaveLength(1)
+    expect(segments[0].text).toBe("I think it's fine.")
+  })
 })
 
 describe('groupIntoClips', () => {

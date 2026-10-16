@@ -11,15 +11,41 @@ export interface SentenceSegment {
 const SENTENCE_END_RE = /[.!?]["')\]]*$/
 
 /**
+ * A fragment missing terminal punctuation only keeps buffering across a gap
+ * this small. Without this cap, a line that never ends in ./!/? — a song
+ * lyric (often written with ♪ instead of a period), a stray watermark line,
+ * an OCR glitch — would keep absorbing every cue after it, including ones
+ * minutes later, while hunting for the next period. Real fragments of one
+ * spoken sentence are adjacent in time; this just stops the search once
+ * that stops being plausible, and flushes whatever's buffered as-is.
+ */
+const MAX_FRAGMENT_GAP_SECONDS = 2
+
+/**
+ * Backstop for content that never produces terminal punctuation at all —
+ * song lyrics are the common case (each line is its own cue, often written
+ * with ♪ instead of a period, and lines follow each other closely enough
+ * that the gap cap above never kicks in). Once a buffered fragment would
+ * reach this long, it's flushed as-is rather than kept open indefinitely.
+ * This is a correctness backstop, not a target length — see groupIntoClips
+ * below for the actual ~10s clip-length policy applied after sentences are
+ * built.
+ */
+const MAX_FRAGMENT_DURATION_SECONDS = 15
+
+/**
  * Builds candidate sentence segments from subtitle cues.
  * - A cue fragment lacking sentence-ending punctuation is merged with
  *   subsequent cues until a sentence boundary is found (fixes fragments split
- *   across multiple subtitle cards).
+ *   across multiple subtitle cards), but never across a gap bigger than
+ *   MAX_FRAGMENT_GAP_SECONDS, and never past MAX_FRAGMENT_DURATION_SECONDS
+ *   total (see above — covers content with no terminal punctuation at all).
  * - A merged block containing several sentences is split on sentence
  *   boundaries. We only have cue-level timestamps, so time is distributed
  *   across split sentences in proportion to character length — a documented
  *   approximation, not a real measurement.
- * - No duration/word-count limits are enforced here; the caller applies flags.
+ * - No other duration/word-count limits are enforced here; the caller
+ *   applies flags for pacing/length instead of rejecting outright.
  */
 export function buildSentenceSegments(cues: SrtCue[]): SentenceSegment[] {
   const segments: SentenceSegment[] = []
@@ -59,6 +85,14 @@ export function buildSentenceSegments(cues: SrtCue[]): SentenceSegment[] {
 
   for (const cue of cues) {
     if (cue.text.trim().length === 0) continue
+
+    const gapTooLarge = bufferStart !== null && cue.start - bufferEnd > MAX_FRAGMENT_GAP_SECONDS
+    const wouldExceedMaxDuration =
+      bufferStart !== null && cue.end - bufferStart > MAX_FRAGMENT_DURATION_SECONDS
+    if (gapTooLarge || wouldExceedMaxDuration) {
+      flushBuffer()
+    }
+
     if (bufferStart === null) bufferStart = cue.start
     bufferEnd = cue.end
     bufferCueIndices.push(cue.index)
