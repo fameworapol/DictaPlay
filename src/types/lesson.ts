@@ -15,7 +15,11 @@ export interface Exercise {
   lessonId: string
   title: string
   difficulty: Difficulty
-  /** Relative path under /public, e.g. "audio/built-in/easy/ex-001.m4a" */
+  /**
+   * Relative path under /public. Production (movie-derived, approved) clips
+   * live under "audio/built-in/<difficulty>/…"; sample/demo clips live under
+   * the separate "audio/sample/<difficulty>/…" and are labeled "Sample" in the UI.
+   */
   audioPath: string
   transcript: string
   /** Present for sample/demo content so the UI can label it "Sample". */

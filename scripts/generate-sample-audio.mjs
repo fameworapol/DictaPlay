@@ -15,7 +15,9 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url))
-const outDir = (difficulty) => join(projectRoot, 'public', 'audio', 'built-in', difficulty)
+// Sample audio lives under audio/sample/, kept separate from audio/built-in/
+// (reserved for human-approved production clips from the movie pipeline).
+const outDir = (difficulty) => join(projectRoot, 'public', 'audio', 'sample', difficulty)
 
 const SAMPLE_EXERCISES = [
   { id: 'ex-001', difficulty: 'easy', text: 'The boy is playing football.' },

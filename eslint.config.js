@@ -36,5 +36,12 @@ export default tseslint.config(
     languageOptions: {
       globals: globals.node,
     },
+  },
+  {
+    // Standalone esbuild-bundled dev tool, not part of the Vite app's HMR graph.
+    files: ['scripts/prepare-lessons/review-server/client/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   }
 )
