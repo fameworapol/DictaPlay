@@ -4,7 +4,7 @@ import { basename } from 'node:path'
 import { candidatesPathFor, clipId, readCandidates, writeCandidates } from './candidates'
 import { exportApprovedClips } from './export'
 import { cutClip, detectSilenceDurations, extractAudioTrack, extractSubtitleTrack, inspectMedia } from './ffmpeg'
-import { detectSegmentFlags, findDuplicateTextIndices } from './flags'
+import { detectSegmentFlags, findDuplicateTextIndices, isMusicLyricText, isTooShortToBeASentence } from './flags'
 import {
   candidateClipPath,
   projectRoot,
@@ -109,7 +109,18 @@ export async function segmentCommand(
   }
   const srtContent = await readFile(subsPath, 'utf-8')
   const cues = parseSrt(srtContent)
-  const sentences = buildSentenceSegments(cues)
+  const allSentences = buildSentenceSegments(cues)
+
+  // Drop song lyrics and too-short fragments before merging into clips, so
+  // neither contaminates a clip and neither becomes a candidate on its own —
+  // this is a text-only rule (music-note markers, word count), not a
+  // judgment about audio quality, which still needs a human (see `review`).
+  const sentences = allSentences.filter(
+    (s) => !isMusicLyricText(s.text) && !isTooShortToBeASentence(s.text)
+  )
+  const musicCount = allSentences.filter((s) => isMusicLyricText(s.text)).length
+  const tooShortCount = allSentences.length - sentences.length - musicCount
+
   // Group whole sentences into ~targetSeconds clips (default 10s) instead of
   // one sentence per clip, so each exercise is a fuller stretch of dialogue.
   // Pass --target-seconds 0 to fall back to one sentence per clip.
@@ -147,7 +158,10 @@ export async function segmentCommand(
     schemaVersion: 1,
     candidates: [...keep, ...newCandidates],
   })
-  console.log(`Segmented ${segments.length} candidate sentences for "${source}" (${difficulty}).`)
+  console.log(`Segmented ${segments.length} candidate clip(s) for "${source}" (${difficulty}).`)
+  console.log(
+    `Excluded before clipping: ${musicCount} song-lyric line(s), ${tooShortCount} fragment(s) under 3 words.`
+  )
 }
 
 export async function cutCommand(source: string, workdir: string): Promise<void> {

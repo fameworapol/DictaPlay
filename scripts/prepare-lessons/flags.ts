@@ -10,8 +10,20 @@ export interface FlaggableSegment {
   end: number
 }
 
-function wordCount(text: string): number {
+export function wordCount(text: string): number {
   return text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length
+}
+
+const MUSIC_NOTE_RE = /[♪♫♬♭♮♯]/
+
+/** True for a subtitle line written as song lyrics (♪ is the standard SRT convention), not spoken dialogue. */
+export function isMusicLyricText(text: string): boolean {
+  return MUSIC_NOTE_RE.test(text)
+}
+
+/** True for a fragment too short to be a real sentence to dictate (e.g. "Huh?", "Yeah."). */
+export function isTooShortToBeASentence(text: string, minWords = 3): boolean {
+  return wordCount(text) < minWords
 }
 
 /**
