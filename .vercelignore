@@ -5,6 +5,8 @@ movie/
 *.mov
 
 # Not needed in the deployed function/bundle.
+# NOTE: scripts/ must stay available — `npm run build` runs
+# scripts/validate-lessons/cli.ts as part of the build itself, and
+# Vercel strips .vercelignore'd files BEFORE running the build, not after.
 tests/
-scripts/
 .git/
