@@ -1,0 +1,22 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+# local pipeline working files (source movies, extracted audio, review state)
+workdir/
+
+# never commit source movie files from anywhere in the project
+*.mkv
+*.mov
+
+coverage
+.vercel
+
+# editors / OS
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
