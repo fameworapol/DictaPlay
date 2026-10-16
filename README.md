@@ -11,7 +11,7 @@ Everything runs client-side: no backend, no database server, no login, and no us
 - **Progress that persists** — attempts, best score, and session history are saved in the browser (IndexedDB) and survive a reload.
 - **Custom content** — import your own MP3/WAV/M4A clips, build lessons from them, reorder/edit/delete.
 - **Backup** — export/import your custom lessons and history as a JSON file, with or without embedded audio.
-- **A local movie-to-lesson pipeline** (`scripts/prepare-lessons`) that turns a `.mkv` file into human-reviewed sentence clips — never run in the deployed app, never uploads anything.
+- **A local movie-to-lesson pipeline** (`scripts/prepare-lessons`) that turns a `.mkv` file into human-reviewed ~10-second dictation clips — never run in the deployed app, never uploads anything.
 
 ## Stack
 
@@ -54,7 +54,7 @@ Given the real movie dialogue and copyright considerations below, also consider 
 
 ### Deployment size / bandwidth
 
-Vercel's free tier has deployment size and monthly bandwidth limits. The sample audio alone is ~180 KB; real movie-derived audio at ~64 kbps mono adds up fast if you export many clips — budget roughly 25–30 KB per 3-second sentence clip. `npm run lessons -- export` prints the total exported size and warns if it crosses a configurable budget (`--budget-mb`, default 150 MB). If your library grows past what fits comfortably in a single static deploy, move audio to an object store with a CDN in front of it (e.g. Cloudflare R2, S3 + CloudFront, Bunny Storage) and change `audioPath` to point at that CDN's URL instead of `/audio/...` — the app only needs a URL it can `fetch`/play, so this requires no app-code changes beyond the index.
+Vercel's free tier has deployment size and monthly bandwidth limits. The sample audio alone is ~180 KB; real movie-derived audio at ~64 kbps mono adds up fast if you export many clips — budget roughly 80 KB per ~10-second clip (the pipeline's default clip length; see `segment` below). `npm run lessons -- export` prints the total exported size and warns if it crosses a configurable budget (`--budget-mb`, default 150 MB). If your library grows past what fits comfortably in a single static deploy, move audio to an object store with a CDN in front of it (e.g. Cloudflare R2, S3 + CloudFront, Bunny Storage) and change `audioPath` to point at that CDN's URL instead of `/audio/...` — the app only needs a URL it can `fetch`/play, so this requires no app-code changes beyond the index.
 
 ## Lesson data structure
 
@@ -118,7 +118,7 @@ Importing never touches built-in/sample content — custom ids always use a `cus
 | `extract-audio <mkv> --source <id> --stream <n>` | Decodes the chosen audio track to `workdir/<id>/audio.wav` |
 | `extract-subs <mkv> --source <id> --stream <n>` (or `--from <file.srt>`) | Gets subtitles — from the file, or an external `.srt` you already have |
 | `transcribe --source <id>` | Only if there are no usable subtitles — runs the local STT tool |
-| `segment --source <id> --difficulty <easy\|medium\|hard>` | Merges fragmented subtitle cues into whole sentences, splits cues with multiple sentences, flags anything questionable (empty transcript, invalid timing, pace too fast for the word count, a long sentence, a duplicate line), writes `workdir/candidates.json` with every candidate `status: "pending"` — **nothing is approved automatically** |
+| `segment --source <id> --difficulty <easy\|medium\|hard> [--target-seconds 10]` | Merges fragmented subtitle cues into whole sentences, splits cues with multiple sentences, then groups consecutive whole sentences into clips around 10 seconds long (never splitting a sentence to do it, and never merging across a scene-change-sized gap) — pass `--target-seconds 0` to go back to one sentence per clip. Flags anything questionable (empty transcript, invalid timing, pace too fast for the word count, a long sentence, a duplicate line). Writes `workdir/candidates.json` with every candidate `status: "pending"` — **nothing is approved automatically** |
 | `cut --source <id>` | Cuts each candidate to its own mono AAC clip (~64 kbps, ~300 ms padding) in `workdir/<id>/candidates/<difficulty>/`, and flags a long silent span if ffmpeg's silence detector finds one |
 | `validate` | Fails if any **approved** clip has an unresolved flag or missing audio |
 | `export` | Runs `validate` first; copies only approved clips into `public/audio/built-in/<difficulty>/` and writes/merges the production lesson index; prints the total exported size and warns past `--budget-mb` (default 150) |
@@ -140,7 +140,7 @@ npm run lessons -- segment --source Toy_Story_5 --difficulty easy
 npm run lessons -- cut --source Toy_Story_5
 # repeat for The_Intern (medium, stream 1 audio / stream 2 subs) and The_Social_Network (hard, same streams)
 
-npm run lessons -- review          # approve the sentences you actually want as lessons
+npm run lessons -- review          # approve the ~10s clips you actually want as lessons
 npm run lessons -- validate
 npm run lessons -- export
 ```
@@ -151,7 +151,7 @@ npm run lessons -- export
 npm run test
 ```
 
-95 tests covering: the comparison engine (normalization, alignment, the documented tie-break rule, contractions, repeated/shifted words); the movie pipeline (SRT parsing, sentence segmentation, flag detection, validate/export logic) against small generated fixtures, never real movies; the storage layer (create/edit/delete, validation failures, the shared-audio delete warning, export/import round-trip, progress surviving a simulated reload) via `fake-indexeddb`; and the production-index validator.
+102 tests covering: the comparison engine (normalization, alignment, the documented tie-break rule, contractions, repeated/shifted words); the movie pipeline (SRT parsing, sentence segmentation, flag detection, validate/export logic) against small generated fixtures, never real movies; the storage layer (create/edit/delete, validation failures, the shared-audio delete warning, export/import round-trip, progress surviving a simulated reload) via `fake-indexeddb`; and the production-index validator.
 
 ## Accessibility
 

@@ -12,7 +12,7 @@ import {
   sourceDir,
   sourceSubsPath,
 } from './paths'
-import { buildSentenceSegments } from './segment'
+import { buildSentenceSegments, groupIntoClips } from './segment'
 import { parseSrt } from './srt'
 import { whisperCliProvider } from './transcribe'
 import type { CandidateClip, Difficulty } from './types'
@@ -101,7 +101,7 @@ export async function segmentCommand(
   source: string,
   difficulty: Difficulty,
   workdir: string,
-  options: { force?: boolean } = {}
+  options: { force?: boolean; targetSeconds?: number } = {}
 ): Promise<void> {
   const subsPath = sourceSubsPath(workdir, source)
   if (!existsSync(subsPath)) {
@@ -109,7 +109,12 @@ export async function segmentCommand(
   }
   const srtContent = await readFile(subsPath, 'utf-8')
   const cues = parseSrt(srtContent)
-  const segments = buildSentenceSegments(cues)
+  const sentences = buildSentenceSegments(cues)
+  // Group whole sentences into ~targetSeconds clips (default 10s) instead of
+  // one sentence per clip, so each exercise is a fuller stretch of dialogue.
+  // Pass --target-seconds 0 to fall back to one sentence per clip.
+  const targetSeconds = options.targetSeconds ?? 10
+  const segments = targetSeconds > 0 ? groupIntoClips(sentences, targetSeconds) : sentences
 
   const candidatesFile = await readCandidates(candidatesPathFor(workdir))
   const existingForSource = candidatesFile.candidates.filter((c) => c.source === source)

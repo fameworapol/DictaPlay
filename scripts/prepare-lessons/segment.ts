@@ -77,3 +77,52 @@ function splitIntoSentences(text: string): string[] {
   const parts = text.split(/(?<=[.!?]["')\]]?)\s+(?=[A-Z0-9"'])/)
   return parts.map((p) => p.trim()).filter((p) => p.length > 0)
 }
+
+/**
+ * Groups consecutive sentence segments into clips around `targetSeconds`
+ * long (default 10s), so an exercise is a few sentences of real dialogue
+ * rather than a single short line. Never cuts a sentence in half — it only
+ * merges whole sentences.
+ *
+ * Greedy left-to-right: keep appending the next sentence while the group is
+ * still under `targetSeconds` and the merge wouldn't exceed `maxSeconds`.
+ * Stops merging across a gap bigger than `maxGapSeconds` (e.g. a scene
+ * change) so a clip doesn't span a long silent stretch just to hit the
+ * target duration.
+ */
+export function groupIntoClips(
+  segments: SentenceSegment[],
+  targetSeconds = 10,
+  maxSeconds = 15,
+  maxGapSeconds = 3
+): SentenceSegment[] {
+  const groups: SentenceSegment[] = []
+  let current: SentenceSegment | null = null
+
+  for (const segment of segments) {
+    if (!current) {
+      current = { ...segment, cueIndices: [...segment.cueIndices] }
+      continue
+    }
+
+    const gap = segment.start - current.end
+    const currentDuration = current.end - current.start
+    const mergedDuration = segment.end - current.start
+
+    if (currentDuration >= targetSeconds || gap > maxGapSeconds || mergedDuration > maxSeconds) {
+      groups.push(current)
+      current = { ...segment, cueIndices: [...segment.cueIndices] }
+      continue
+    }
+
+    current = {
+      start: current.start,
+      end: segment.end,
+      text: `${current.text} ${segment.text}`,
+      cueIndices: [...current.cueIndices, ...segment.cueIndices],
+    }
+  }
+
+  if (current) groups.push(current)
+  return groups
+}

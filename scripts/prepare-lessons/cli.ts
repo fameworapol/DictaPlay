@@ -30,7 +30,7 @@ Commands:
   extract-audio <mkv> --source <id> --stream <index>
   extract-subs [<mkv>] --source <id> [--stream <index>] [--from <srt>]
   transcribe --source <id>
-  segment --source <id> --difficulty <easy|medium|hard> [--force]
+  segment --source <id> --difficulty <easy|medium|hard> [--force] [--target-seconds 10]
   cut --source <id>
   review [--port 4321]
   validate
@@ -82,8 +82,12 @@ async function main() {
       const source = flag(rest, 'source')
       const difficulty = flag(rest, 'difficulty') as Difficulty | undefined
       const force = rest.includes('--force')
+      const targetSecondsFlag = flag(rest, 'target-seconds')
       if (!source || !difficulty) usage()
-      await segmentCommand(source, difficulty, WORKDIR, { force })
+      await segmentCommand(source, difficulty, WORKDIR, {
+        force,
+        targetSeconds: targetSecondsFlag === undefined ? undefined : Number(targetSecondsFlag),
+      })
       return
     }
     case 'cut': {
