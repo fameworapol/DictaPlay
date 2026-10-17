@@ -110,7 +110,7 @@ export function PracticePage() {
     setChecked(false)
     setResult(null)
     setAnswerRevealed(false)
-    setAnswer('')
+    // Keep the typed answer so the user can edit it instead of retyping from scratch.
   }
 
   function handleShowAnswer() {
