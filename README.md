@@ -101,6 +101,32 @@ All custom lessons, audio, and practice history live only in this browser's Inde
 
 Importing never touches built-in/sample content — custom ids always use a `custom-` prefix, a structurally separate namespace — and the file is validated (schema version, shape) before anything is written.
 
+## Cross-device progress sync (optional)
+
+By default, practice progress (`attempts`/`sessions` — not custom lessons/audio) lives only in one browser's IndexedDB. If you want that history to follow you across devices/browsers, you can optionally wire up a small sync backend. It's off unless you configure it — with no env vars set, the app behaves exactly as it does without this section, no code changes needed.
+
+**What it is:** two Vercel serverless functions (`api/attempts.ts`, `api/sessions.ts`) backed by [Turso](https://turso.tech) — SQLite under the hood, hosted so it survives Vercel's ephemeral serverless filesystem (a plain local `.sqlite` file would NOT persist between function invocations on Vercel). `getAllProgress`/`getAllSessions` merge local + remote on every call and write back to both sides, so it self-heals — the very first call after you configure this pushes all your existing local history up automatically, no migration script needed.
+
+**Honest security note:** protection is a single shared-secret header, not real authentication — the key ships inside the client JS bundle, so anyone with devtools open can read it and call the API directly. That's an acceptable trade-off for personal practice scores on a single-user app, not for anything sensitive.
+
+### Set it up
+
+1. Install the Turso CLI and create a database (needs your own free Turso account):
+   ```bash
+   curl -sSfL https://get.tur.so/install.sh | bash
+   turso auth login
+   turso db create dictaplay-progress
+   turso db show dictaplay-progress --url        # -> TURSO_DATABASE_URL
+   turso db tokens create dictaplay-progress      # -> TURSO_AUTH_TOKEN
+   ```
+   No manual schema step — both tables are created automatically on first use.
+2. In Vercel → Project Settings → Environment Variables, add (Production + Preview + Development):
+   - `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` — server-only, from the commands above.
+   - `SYNC_API_KEY` — any random string you pick, server-only.
+   - `VITE_SYNC_API_KEY` — the **same** value as `SYNC_API_KEY`, but this one ships to the client (that's what makes it build-baked, not a secret).
+3. Redeploy. For local full-stack testing (`/api/*` isn't served by plain `vite`), use `npm run dev:vercel` (runs `vercel dev`, needs `vercel login` once) and put the same four variables in `.env.local`.
+4. Inspect the data directly any time with `turso db shell dictaplay-progress` — it's genuinely a SQLite database, just a hosted one.
+
 ## The movie lesson pipeline (local only — never runs on Vercel, never uploads anything)
 
 > **Legal note:** only run this against media you have the right to use. Publishing clips from a copyrighted film on a public site can infringe copyright even if you legitimately own the source file. If you deploy real movie-derived content, consider Vercel's password protection or keeping the deployment private.
@@ -152,7 +178,7 @@ npm run lessons -- export
 npm run test
 ```
 
-117 tests covering: the comparison engine (normalization, alignment, the documented tie-break rule, contractions, repeated/shifted words); the movie pipeline (SRT parsing, sentence segmentation, flag detection, validate/export logic) against small generated fixtures, never real movies; the storage layer (create/edit/delete, validation failures, the shared-audio delete warning, export/import round-trip, progress surviving a simulated reload) via `fake-indexeddb`; and the production-index validator.
+154 tests covering: the comparison engine (normalization, alignment, the documented tie-break rule, contractions, repeated/shifted words); the movie pipeline (SRT parsing, sentence segmentation, flag detection, validate/export logic) against small generated fixtures, never real movies; the storage layer (create/edit/delete, validation failures, the shared-audio delete warning, export/import round-trip, progress surviving a simulated reload) via `fake-indexeddb`; the sync merge logic and API payload validation/mapping (pure functions, plus the sync client's never-throws failure handling); and the production-index validator.
 
 ## Accessibility
 

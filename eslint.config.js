@@ -32,7 +32,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**/*.{ts,tsx}', '*.config.{ts,js}'],
+    files: ['scripts/**/*.{ts,tsx}', 'api/**/*.ts', '*.config.{ts,js}'],
     languageOptions: {
       globals: globals.node,
     },
