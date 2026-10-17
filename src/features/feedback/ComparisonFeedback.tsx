@@ -44,6 +44,18 @@ export function ComparisonFeedback({ transcript, result }: ComparisonFeedbackPro
           })}
         </ul>
       </div>
+
+      {!result.isExactMatch && (
+        <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+          <p className="font-semibold">💡 Tip: connected speech</p>
+          <p className="mt-1">
+            In fast, natural English, words often blend together — e.g. "want to" sounds like
+            "wanna", "going to" like "gonna", "did you" like "didja". If a word sounded
+            different from how it's spelled, try replaying at 0.75x or 0.5x speed to hear the
+            parts more clearly.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
